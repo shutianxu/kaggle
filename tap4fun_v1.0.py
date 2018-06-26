@@ -38,7 +38,9 @@ def data_process(X):
     X['reaserch_acceleration'] = X['reaserch_acceleration_reduce_value'] - X['reaserch_acceleration_add_value']
     X['training_acceleration'] = X['training_acceleration_reduce_value'] - X['training_acceleration_add_value']
     X['treatment_acceleration'] = X['treatment_acceleration_reduce_value'] - X['treatment_acceleraion_add_value']    
-    X = X.drop(['wood_reduce_value' ,'wood_add_value' ,'stone_add_value' ,'stone_reduce_value' ,'ivory_add_value' ,'ivory_reduce_value' ,'meat_add_value' ,'meat_reduce_value' ,'magic_add_value' ,'magic_reduce_value' ,'infantry_add_value' ,'infantry_reduce_value' ,'cavalry_add_value' ,'cavalry_reduce_value' ,'shaman_add_value' ,'shaman_reduce_value' ,'wound_infantry_add_value' ,'wound_infantry_reduce_value' ,'wound_cavalry_add_value' ,'wound_cavalry_reduce_value' ,'wound_shaman_add_value' ,'wound_shaman_reduce_value' ,'general_acceleration_add_value' ,'general_acceleration_reduce_value' ,'building_acceleration_add_value' ,'building_acceleration_reduce_value' ,'reaserch_acceleration_add_value' ,'reaserch_acceleration_reduce_value' ,'training_acceleration_add_value' ,'training_acceleration_reduce_value' ,'treatment_acceleraion_add_value' ,'treatment_acceleration_reduce_value'],axis=1)
+# =============================================================================
+#     X = X.drop(['wood_reduce_value' ,'wood_add_value' ,'stone_add_value' ,'stone_reduce_value' ,'ivory_add_value' ,'ivory_reduce_value' ,'meat_add_value' ,'meat_reduce_value' ,'magic_add_value' ,'magic_reduce_value' ,'infantry_add_value' ,'infantry_reduce_value' ,'cavalry_add_value' ,'cavalry_reduce_value' ,'shaman_add_value' ,'shaman_reduce_value' ,'wound_infantry_add_value' ,'wound_infantry_reduce_value' ,'wound_cavalry_add_value' ,'wound_cavalry_reduce_value' ,'wound_shaman_add_value' ,'wound_shaman_reduce_value' ,'general_acceleration_add_value' ,'general_acceleration_reduce_value' ,'building_acceleration_add_value' ,'building_acceleration_reduce_value' ,'reaserch_acceleration_add_value' ,'reaserch_acceleration_reduce_value' ,'training_acceleration_add_value' ,'training_acceleration_reduce_value' ,'treatment_acceleraion_add_value' ,'treatment_acceleration_reduce_value'],axis=1)
+# =============================================================================
     return X
 
 def data_clf_process(X):
@@ -146,7 +148,6 @@ test = data_clf_process(test)
 test = min_max_scaler(test)
 
 
-
 y_pre = clf.predict(test)
 y_pre_pro = clf.predict_proba(test)[:, 1]
 
@@ -172,7 +173,6 @@ reg_test = data_process(reg_test)
 '''
 '''
 reg_test = data_reg_process(reg_test)
-reg_test = min_max_scaler(reg_test)
 
 '''
 训练回归模型
@@ -181,34 +181,37 @@ from lightgbm import LGBMRegressor
 
 data = data[data.prediction_pay_price > 0]
 
-target = data['prediction_pay_price']
-features = data.drop(['user_id','register_time','classification_label','prediction_pay_price'],axis=1)
+reg_target = data['prediction_pay_price']
+reg_features = data.drop(['user_id','register_time','classification_label','prediction_pay_price'],axis=1)
 
 
 X_train,X_test,y_train,y_test = train_test_split(
-features,target,test_size=0.25,random_state=42)
+reg_features,reg_target,test_size=0.25,random_state=42)
 
 '''
 '''
 
-features = data_reg_process(features)
-features = min_max_scaler(features)
+reg_features = data_reg_process(reg_features)
 
 
 
-reg = LGBMRegressor(num_leaves=40,max_depth=8,n_estimators=2000,min_child_weight=10,objective ='regression',
-                    subsample=0.7, learning_rate=0.3, colsample_bytree=0.7,subsample_freq=2,reg_alpha=0, reg_lambda=1,class_weight = 'balanced')
+reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=10000,min_child_weight=10,subsample=0.7, 
+                    colsample_bytree=0.7,reg_alpha=0,learning_rate=0.1,reg_lambda=0.5,bagging_fraction = 0.8,
+                    bagging_freq = 5,feature_fraction = 0.2319,feature_fraction_seed=9, bagging_seed=9)
+
+
+
 
 '''
 实际回归建模
 '''
 
-reg.fit(features, target, eval_set=[(features, target)], eval_metric='rmse',early_stopping_rounds=100)
+reg.fit(reg_features, reg_target, eval_set=[(reg_features, reg_target)], eval_metric='rmse',early_stopping_rounds=100)
 reg_y_pre = reg.predict(reg_test)
 
-y_pred = reg.predict(X_train)
+y_pre = reg.predict(X_test)
 
-print(np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
 
 
 reg_df = pd.DataFrame({ 
