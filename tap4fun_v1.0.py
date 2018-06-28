@@ -7,8 +7,8 @@ Created on Tue Apr 10 14:22:48 2018
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split 
-from sklearn.metrics import classification_report   
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
 from sklearn import metrics
 import lightgbm as lgb
 
@@ -112,7 +112,7 @@ features,target,test_size=0.25,random_state=42)
 
 clf = lgb.LGBMClassifier(
         boosting_type='gbdt', num_leaves=40, reg_alpha=0, reg_lambda=1,
-        max_depth=20, n_estimators=600, objective='binary',
+        max_depth=20, n_estimators=1000, objective='binary',
         subsample=0.7, colsample_bytree=0.7, subsample_freq=2,
         learning_rate=0.3, min_child_weight=50, random_state=2018, n_jobs=-1,class_weight = 'balanced'
     )
@@ -209,9 +209,9 @@ reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=10000,min_child_weigh
 reg.fit(reg_features, reg_target, eval_set=[(reg_features, reg_target)], eval_metric='rmse',early_stopping_rounds=100)
 reg_y_pre = reg.predict(reg_test)
 
-y_pre = reg.predict(X_test)
+y_pred = reg.predict(X_test)
 
-print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
+print(np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
 
 
 reg_df = pd.DataFrame({ 
