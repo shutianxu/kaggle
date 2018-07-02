@@ -215,7 +215,7 @@ reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=1000,min_child_weight
 实际回归建模
 '''
 
-cnt=3
+cnt=2
 size = math.ceil(len(reg_features) / cnt)
 result=[]
 print('ready for reg!!')
