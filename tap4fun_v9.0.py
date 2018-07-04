@@ -14,7 +14,7 @@ V5.0
 V6.0
 调整分类lambda(0切),封箱在线时长、pay_prace -> 84.47
 调整分类lambda(1切),封箱在线时长、pay_prace -> 84.31
-V7.0特征处理完直接回归
+V7.0特征处理完直接回归,加入测试集的RMSE
 V9.0加入深度学习特征
 '''
 import pandas as pd
@@ -145,15 +145,12 @@ tap_fun_test = pd.read_csv("D:/data/tap4fun/tap_fun_test.csv", sep = ',')
 
 
 
-
-tap_fun_train['classification_label'] = tap_fun_train['prediction_pay_price'].map(lambda x: 1 if x >= 1 else 0)
+tap_fun_train['xiangcha'] = tap_fun_train['prediction_pay_price']-tap_fun_train['pay_price']
+tap_fun_train['classification_label'] = tap_fun_train['xiangcha'].map(lambda x: 1 if x > 0 else 0)
 data = pd.concat([tap_fun_train,tap_fun_test])
 data = data.fillna(-1)
 register_time = []
 for i in data['register_time']:
-# =============================================================================
-#     print(datetime.datetime.strptime(i,'%Y-%m-%d %H:%M:%S').strftime("%a"))
-# =============================================================================
     register_time.append(datetime.datetime.strptime(i,'%Y-%m-%d %H:%M:%S').strftime("%a"))
 data['register_time'] = register_time
 
@@ -184,7 +181,7 @@ reg_data = data_process(data)
 # reg_data = get_dummies(reg_data)
 # =============================================================================
 
-reg_test = data[data.classification_label == -1].drop(['user_id','classification_label','prediction_pay_price'],axis=1)
+reg_test = data[data.classification_label == -1].drop(['user_id','classification_label','prediction_pay_price','xiangcha'],axis=1)
 
 
 
@@ -195,27 +192,20 @@ from lightgbm import LGBMRegressor
 
 reg_data = reg_data[reg_data.prediction_pay_price >= 0]
 reg_data = data_reg_process(reg_data)
-reg_target = reg_data['prediction_pay_price']
-reg_features = reg_data.drop(['user_id','classification_label','prediction_pay_price'],axis=1)
-
+reg_target = reg_data['xiangcha']
+reg_features = reg_data.drop(['user_id','classification_label','prediction_pay_price','xiangcha'],axis=1)
 
 '''
 '''
-
-
-
 reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=1000,min_child_weight=10,subsample=0.7, 
-                    colsample_bytree=0.7,reg_alpha=0,learning_rate=0.2,reg_lambda=1,bagging_fraction = 0.8,
+                    colsample_bytree=0.7,reg_alpha=0,learning_rate=0.1,reg_lambda=1,bagging_fraction = 0.8,
                     bagging_freq = 5,feature_fraction_seed=9, bagging_seed=9)
-
-
-
 
 '''
 实际回归建模
 '''
 
-cnt=2
+cnt=1
 size = math.ceil(len(reg_features) / cnt)
 result=[]
 print('ready for reg!!')
@@ -225,9 +215,8 @@ for i in range(cnt):
     slice_features = reg_features[start:end]
     slice_target = reg_target[start:end]
     print(i+1)
-    X_train,X_test,y_train,y_test = train_test_split(slice_features,slice_target,test_size=0.2,random_state=42)
-    reg.fit(X_train, y_train, eval_set=[(X_train, y_train)], eval_metric='rmse',early_stopping_rounds=100) 
-
+    X_train,X_test,y_train,y_test = train_test_split(slice_features,slice_target,test_size=0.1,random_state=42)
+    reg.fit(X_train, y_train, eval_set=[(X_train,y_train),(X_test, y_test)],eval_names =['train_data','valid_data'], eval_metric='rmse',early_stopping_rounds=100) 
     y_pre = reg.predict(X_test)
     print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))    
     y_pred = reg.predict(reg_test)
@@ -238,13 +227,14 @@ y_pred = np.mean(result,axis=0)
 
 reg_df = pd.DataFrame({ 
                         'user_id' : data[data.classification_label == -1]['user_id'],
-                        'prediction_pay_price' : y_pred,
+                        'xiangcha' : y_pred,
                         })
+ 
     
-reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'].map(lambda x: 0 if x < 0.01 else x)
-
-
-reg_df.to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+final_df = pd.merge(data[data.classification_label == -1][['user_id','pay_price']], reg_df, on='user_id',how='left')
+final_df['prediction_pay_price'] = final_df['xiangcha'] + final_df['pay_price']
+final_df['prediction_pay_price'] = final_df['prediction_pay_price'].map(lambda x: 0 if x < 0.99 else x)
+final_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
 
 
 '''
