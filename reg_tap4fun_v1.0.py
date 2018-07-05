@@ -5,17 +5,7 @@ Created on Tue Apr 10 14:22:48 2018
 """
 '''
 V1.0回归  ->85
-v2.0回归+分类，特征选取 -> 82
-V3.0数据集+测试集合并，回归模型做哑变量处理 -> 78.399
-V4.0特征工程,分类切片哑变量处理，加入注册时间特征 ->  77.3297
-V5.0
-加入回归算法PCA降维 200维-> 94（待优化）
-加入回归算法PCA降维 500维-> 98（待优化）
-V6.0
-调整分类lambda(0切),封箱在线时长、pay_prace -> 84.47
-调整分类lambda(1切),封箱在线时长、pay_prace -> 84.31
-V7.0特征处理完直接回归,加入测试集的RMSE
-V9.0加入深度学习特征
+v2.0回归 转化label 为 ([prediction_pay_price]-[pay_price])/[prediction_pay_price]
 '''
 import pandas as pd
 import numpy as np
@@ -76,8 +66,10 @@ def data_process(X):
 
 def data_clf_process(X):
     X = X
-    X = X.drop(X[(X.avg_online_minutes < 5)&(X.prediction_pay_price > 1000)].index)
-    X = X.drop(X[(X.avg_online_minutes >1000)&(X.prediction_pay_price < 10)].index)  
+# =============================================================================
+#     X = X.drop(X[(X.avg_online_minutes < 5)&(X.prediction_pay_price > 1000)].index)
+#     X = X.drop(X[(X.avg_online_minutes >1000)&(X.prediction_pay_price < 10)].index)  
+# =============================================================================
 # =============================================================================
 #     X['bd_training_hut_level'] = X['bd_training_hut_level'].map(lambda x: 1 if x > 0 else 0)
 #     X['bd_healing_lodge_level'] = X['bd_healing_lodge_level'].map(lambda x: 1 if x > 0 else 0)
@@ -100,8 +92,10 @@ def data_clf_process(X):
 
 def data_reg_process(X):
     X = X
-    X = X.drop(X[(X.avg_online_minutes < 5)&(X.prediction_pay_price > 1000)].index)
-    X = X.drop(X[(X.avg_online_minutes >1000)&(X.prediction_pay_price < 10)].index)
+# =============================================================================
+#     X = X.drop(X[(X.avg_online_minutes < 5)&(X.prediction_pay_price > 1000)].index)
+#     X = X.drop(X[(X.avg_online_minutes >1000)&(X.prediction_pay_price < 10)].index)
+# =============================================================================
     return X
 
 def get_dummies(X):
@@ -146,6 +140,7 @@ tap_fun_test = pd.read_csv("D:/data/tap4fun/tap_fun_test.csv", sep = ',')
 
 
 tap_fun_train['xiangcha'] = tap_fun_train['prediction_pay_price']-tap_fun_train['pay_price']
+tap_fun_train['label'] = tap_fun_train['xiangcha']/tap_fun_train['prediction_pay_price']
 tap_fun_train['classification_label'] = tap_fun_train['xiangcha'].map(lambda x: 1 if x >= 1 else 0)
 data = pd.concat([tap_fun_train,tap_fun_test])
 data = data.fillna(-1)
@@ -193,9 +188,9 @@ reg_test = data[data.classification_label == -1].drop(['user_id','classification
 '''
 from lightgbm import LGBMRegressor
 
-reg_data = reg_data[reg_data.prediction_pay_price >= 0]
+reg_data = reg_data[reg_data.label > 0]
 reg_data = data_reg_process(reg_data)
-reg_target = reg_data['xiangcha']
+reg_target = reg_data['label']
 reg_features = reg_data.drop(['user_id','classification_label','prediction_pay_price','xiangcha'],axis=1)
 
 
@@ -204,7 +199,7 @@ reg_features = reg_data.drop(['user_id','classification_label','prediction_pay_p
 
 
 
-reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=1000,min_child_weight=10,subsample=0.7, 
+reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=3000,min_child_weight=10,subsample=0.7, 
                     colsample_bytree=0.7,reg_alpha=0,learning_rate=0.1,reg_lambda=1,bagging_fraction = 0.8,
                     bagging_freq = 5,feature_fraction_seed=9, bagging_seed=9)
 
@@ -237,13 +232,14 @@ y_pred = np.mean(result,axis=0)
 
 reg_df = pd.DataFrame({ 
                         'user_id' : data[data.classification_label == -1]['user_id'],
-                        'xiangcha' : y_pred,
+                        'pro' : y_pred,
                         })
  
     
 final_df = pd.merge(data[data.classification_label == -1][['user_id','pay_price']], reg_df, on='user_id',how='left')
-final_df['prediction_pay_price'] = final_df['xiangcha'] + final_df['pay_price']
-final_df['prediction_pay_price'] = final_df['prediction_pay_price'].map(lambda x: 0 if x < 0.99 else x)
+final_df['prediction_pay_price'] = final_df['pay_price']/(1-final_df['pro'])
+
+
 final_df.to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
 
 

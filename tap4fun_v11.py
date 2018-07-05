@@ -18,7 +18,7 @@ V7.0特征处理完直接回归 -> 0
 V8.0 调整分类lambda(1切，>0.5，reg_alpha=1) -> 84
 V9.0 加入验证集,回归 -> 81
 V10.0 45-7 相差作为LABEL
-V11 分类 + 单特征
+V11 分类 + 单特征 -> 71
 '''
 import pandas as pd
 import numpy as np
