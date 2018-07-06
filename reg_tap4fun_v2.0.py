@@ -194,7 +194,7 @@ reg_test['intercept'] = 1.0
 from lightgbm import LGBMRegressor
 
 reg_data = reg_data[(reg_data.label > 0)]
-reg_data = reg_data.drop(reg_data[reg_data.pay_price > 200].index)
+reg_data = reg_data.drop(reg_data[reg_data.pay_price > 50].index)
 
 reg_data = data_reg_process(reg_data)
 reg_target = reg_data['label']
@@ -273,11 +273,11 @@ final_df = pd.merge(data[data.classification_label == -1][['user_id','pay_price'
 final_df['prediction_pay_price'] = final_df['pay_price']/(1-final_df['pro'])
 
 
-# =============================================================================
-# final_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
-# =============================================================================
+final_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
 
-final_df.to_csv('D:/999github/kaggle/sub_sample_10.csv', index=False)
+# =============================================================================
+# final_df.to_csv('D:/999github/kaggle/sub_sample_10.csv', index=False)
+# =============================================================================
 
 '''
 回归特征权重显示
