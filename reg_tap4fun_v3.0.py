@@ -199,7 +199,8 @@ from lightgbm import LGBMRegressor
 
 reg_data = reg_data[(reg_data.label >= 0)]
 # =============================================================================
-# reg_data = reg_data.drop(reg_data[reg_data.pay_price > 500].index)
+# reg_data = reg_data.drop((reg_data[(reg_data.pay_price >= 100) & (reg_data.avg_online_minutes < 35)]).index)
+# reg_data = reg_data.drop((reg_data[(reg_data.pay_price < 0.99) & (reg_data.avg_online_minutes > 840)]).index)
 # =============================================================================
 
 reg_data = data_reg_process(reg_data)
@@ -222,7 +223,7 @@ reg_features['intercept'] = 1.0
 # =============================================================================
 
 from sklearn.linear_model import ElasticNet
-reg = ElasticNet(alpha=0.5, l1_ratio=0.5, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.0001, warm_start=True, positive=True, random_state=42, selection='cyclic')
+reg = ElasticNet(alpha=0.5, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.0001, warm_start=True, positive=True, random_state=42, selection='cyclic')
 
 
 # =============================================================================
@@ -269,21 +270,14 @@ reg_df = pd.DataFrame({
                         'prediction_pay_price' : y_pred
                         })
  
-# =============================================================================
-# reg_df['pro'] =  reg_df['pro'].map(lambda x: 0 if x < 0 else x)  
-# reg_df['pro'] =  reg_df['pro'].map(lambda x: 0.8 if x > 0.8 else x) 
-# =============================================================================
-# =============================================================================
-# reg_df['pro'] =  reg_df['pro'].map(lambda x: 0.78 if x > 0.78 else x) 
-# =============================================================================
-# =============================================================================
-# final_df = pd.merge(data[data.classification_label == -1][['user_id','pay_price']], reg_df, on='user_id',how='left')
-# final_df['prediction_pay_price'] = final_df['pay_price']/(1-final_df['pro'])
-# =============================================================================
+reg_df_1 = reg_df[reg_df.price == 0]
+reg_df_2 = reg_df[reg_df.price != 0]
+reg_df_1['prediction_pay_price'] = reg_df_1['prediction_pay_price'].map(lambda x: 0 if x < 10 else x)
 
-reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'].map(lambda x: 0 if x < 1 else x)
+reg_df = pd.concat([reg_df_1,reg_df_2])
+
 # =============================================================================
-# final_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+# reg_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
 # =============================================================================
 
 reg_df.to_csv('D:/999github/kaggle/sub_sample_10.csv', index=False)
