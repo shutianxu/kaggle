@@ -42,22 +42,25 @@ import datetime
 basic做数据预处理
 '''
 def data_process(X):
-    X['wood'] = X['wood_add_value'] - X['wood_reduce_value'] 
-    X['stone'] = X['stone_add_value'] - X['stone_reduce_value'] 
-    X['ivory'] = X['ivory_add_value']  - X['ivory_reduce_value'] 
-    X['meat'] =  X['meat_add_value'] - X['meat_reduce_value']
-    X['magic'] =  X['magic_add_value'] - X['magic_reduce_value']
-    X['infantry'] = X['infantry_add_value'] - X['infantry_reduce_value'] 
-    X['cavalry'] = X['cavalry_add_value'] - X['cavalry_reduce_value'] 
-    X['shaman'] = X['shaman_add_value'] - X['shaman_reduce_value'] 
-    X['wound_infantry'] = X['wound_infantry_add_value'] - X['wound_infantry_reduce_value'] 
-    X['wound_cavalry'] =  X['wound_cavalry_add_value'] - X['wound_cavalry_reduce_value']
-    X['wound_shaman'] = X['wound_shaman_add_value'] - X['wound_shaman_reduce_value'] 
-    X['general_acceleration'] = X['general_acceleration_reduce_value'] - X['general_acceleration_add_value'] 
-    X['building_acceleration'] = X['building_acceleration_add_value'] - X['building_acceleration_reduce_value']
-    X['reaserch_acceleration'] = X['reaserch_acceleration_add_value'] -  X['reaserch_acceleration_reduce_value']
-    X['training_acceleration'] =  X['training_acceleration_add_value'] - X['training_acceleration_reduce_value']
-    X['treatment_acceleration'] =  X['treatment_acceleraion_add_value'] - X['treatment_acceleration_reduce_value']  
+# =============================================================================
+#     X['wood'] = X['wood_add_value'] - X['wood_reduce_value'] 
+#     X['stone'] = X['stone_add_value'] - X['stone_reduce_value'] 
+#     X['ivory'] = X['ivory_add_value']  - X['ivory_reduce_value'] 
+#     X['meat'] =  X['meat_add_value'] - X['meat_reduce_value']
+#     X['magic'] =  X['magic_add_value'] - X['magic_reduce_value']
+#     X['infantry'] = X['infantry_add_value'] - X['infantry_reduce_value'] 
+#     X['cavalry'] = X['cavalry_add_value'] - X['cavalry_reduce_value'] 
+#     X['shaman'] = X['shaman_add_value'] - X['shaman_reduce_value'] 
+#     X['wound_infantry'] = X['wound_infantry_add_value'] - X['wound_infantry_reduce_value'] 
+#     X['wound_cavalry'] =  X['wound_cavalry_add_value'] - X['wound_cavalry_reduce_value']
+#     X['wound_shaman'] = X['wound_shaman_add_value'] - X['wound_shaman_reduce_value'] 
+#     X['general_acceleration'] = X['general_acceleration_reduce_value'] - X['general_acceleration_add_value'] 
+#     X['building_acceleration'] = X['building_acceleration_add_value'] - X['building_acceleration_reduce_value']
+#     X['reaserch_acceleration'] = X['reaserch_acceleration_add_value'] -  X['reaserch_acceleration_reduce_value']
+#     X['training_acceleration'] =  X['training_acceleration_add_value'] - X['training_acceleration_reduce_value']
+#     X['treatment_acceleration'] =  X['treatment_acceleraion_add_value'] - X['treatment_acceleration_reduce_value']  
+# =============================================================================
+    X = X
 # =============================================================================
 #     X = X.drop(['wood_reduce_value' ,'wood_add_value' ,'stone_add_value' ,'stone_reduce_value' ,'ivory_add_value' ,'ivory_reduce_value' ,'meat_add_value' ,'meat_reduce_value' ,'magic_add_value' ,'magic_reduce_value' ,'infantry_add_value' ,'infantry_reduce_value' ,'cavalry_add_value' ,'cavalry_reduce_value' ,'shaman_add_value' ,'shaman_reduce_value' ,'wound_infantry_add_value' ,'wound_infantry_reduce_value' ,'wound_cavalry_add_value' ,'wound_cavalry_reduce_value' ,'wound_shaman_add_value' ,'wound_shaman_reduce_value' ,'general_acceleration_add_value' ,'general_acceleration_reduce_value' ,'building_acceleration_add_value' ,'building_acceleration_reduce_value' ,'reaserch_acceleration_add_value' ,'reaserch_acceleration_reduce_value' ,'training_acceleration_add_value' ,'training_acceleration_reduce_value' ,'treatment_acceleraion_add_value' ,'treatment_acceleration_reduce_value'],axis=1)
 # =============================================================================
@@ -141,35 +144,44 @@ reg_data = data_process(data)
 # =============================================================================
 # reg_data = get_dummies(reg_data)
 # =============================================================================
-reg_test = data[data.classification_label == -1].drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
-# =============================================================================
-# reg_test = data[data.classification_label == -1][['pay_price','ivory_add_value','stone_add_value','wood_add_value','ivory_reduce_value']]
-# =============================================================================
-# =============================================================================
-# reg_test = min_max_scaler(reg_test)
-# =============================================================================
-reg_test['intercept'] = 1.0
+reg_test_1 = data[(data.classification_label == -1)&(data.pay_price <= 0.99)].drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+reg_test_1['intercept'] = 1.0
+
+
+reg_test_2 = data[(data.classification_label == -1)&(data.pay_price > 0.99)].drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+reg_test_2['intercept'] = 1.0
+
 
 '''
 训练回归模型
 '''
-from lightgbm import LGBMRegressor
 
-reg_data = reg_data[(reg_data.label >= 0)]
+reg_data_1 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price <= 0.99)]
 # =============================================================================
 # reg_data = reg_data.drop((reg_data[(reg_data.pay_price >= 100) & (reg_data.avg_online_minutes < 35)]).index)
+# =============================================================================
+# =============================================================================
+# reg_data_1 = reg_data_1.drop((reg_data_1[(reg_data_1.pay_price < 0.99) & (reg_data_1.avg_online_minutes > 840)]).index)
+# =============================================================================
+
+reg_target_1 = reg_data_1['label']
+reg_features_1 = reg_data_1.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+reg_features_1['intercept'] = 1.0
+
+
+reg_data_2 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price > 0.99)]
+# =============================================================================
+# reg_data_2 = reg_data_2.drop((reg_data_2[(reg_data_2.pay_price >= 100) & (reg_data_2.avg_online_minutes < 35)]).index)
+# =============================================================================
+# =============================================================================
 # reg_data = reg_data.drop((reg_data[(reg_data.pay_price < 0.99) & (reg_data.avg_online_minutes > 840)]).index)
 # =============================================================================
 
-reg_target = reg_data['label']
-reg_features = reg_data.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
-# =============================================================================
-# reg_features = reg_data[['pay_price','ivory_add_value','stone_add_value','wood_add_value','ivory_reduce_value']]
-# =============================================================================
-# =============================================================================
-# reg_features = min_max_scaler(reg_features)
-# =============================================================================
-reg_features['intercept'] = 1.0
+reg_target_2 = reg_data_2['label']
+reg_features_2 = reg_data_2.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+reg_features_2['intercept'] = 1.0
+
+
 
 '''
 '''
@@ -180,70 +192,77 @@ reg_features['intercept'] = 1.0
 # =============================================================================
 
 from sklearn.linear_model import ElasticNet
-reg = ElasticNet(alpha=0.8, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
-
-
-# =============================================================================
-# reg = LGBMRegressor(num_leaves=40,max_depth=7,n_estimators=3000,min_child_weight=10,subsample=0.7, 
-#                     colsample_bytree=0.7,reg_alpha=0,learning_rate=0.1,reg_lambda=1,bagging_fraction = 0.8,
-#                     bagging_freq = 5,feature_fraction_seed=9, bagging_seed=9)
-# 
-# =============================================================================
-
-
+reg_1 = ElasticNet(alpha=0.8, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
+reg_2 = ElasticNet(alpha=1, l1_ratio=1, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
 
 '''
 实际回归建模
 '''
 
-cnt=1
-size = math.ceil(len(reg_features) / cnt)
-result=[]
-print('ready for reg!!')
-for i in range(cnt):
-    start = size * i
-    end = (i + 1) * size if (i + 1) * size < len(reg_features) else len(reg_features)
-    slice_features = reg_features[start:end]
-    slice_target = reg_target[start:end]
-    print(i+1)
-    X_train,X_test,y_train,y_test = train_test_split(slice_features,slice_target,test_size=0.2,random_state=42)
-    reg.fit(X_train, y_train) 
 
-# =============================================================================
-#     reg.fit(X_train, y_train, eval_set=[(X_train,y_train),(X_test, y_test)],eval_names =['train_data','valid_data'], eval_metric='rmse',early_stopping_rounds=100) 
-# =============================================================================
+X_train,X_test,y_train,y_test = train_test_split(reg_features_1,reg_target_1,test_size=0.2,random_state=42)
+reg_1.fit(X_train, y_train) 
+y_pre = reg_1.predict(X_test)
+
+
+print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
+y_pred_1 = reg_1.predict(reg_test_1)
     
-    y_pre = reg.predict(X_test)
-    print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
-    y_pred = reg.predict(reg_test)
-    result.append(y_pred)
-    
-y_pred = np.mean(result,axis=0)
 
-
-reg_df = pd.DataFrame({ 
-                        'user_id' : data[data.classification_label == -1]['user_id'],
-                        'price':reg_test['pay_price'],
-                        'prediction_pay_price' : y_pred
+reg_df_1 = pd.DataFrame({ 
+                        'user_id' : data[(data.classification_label == -1)&(data.pay_price <= 0.99)]['user_id'],
+                        'price':reg_test_1['pay_price'],
+                        'prediction_pay_price' : y_pred_1
                         })
  
-reg_df_1 = reg_df[reg_df.price == 0]
-reg_df_2 = reg_df[reg_df.price != 0]
+reg_df_1['prediction_pay_price'] = reg_df_1['prediction_pay_price'].map(lambda x: 0 if x < 0 else x)
+    
+X_train,X_test,y_train,y_test = train_test_split(reg_features_2,reg_target_2,test_size=0.2,random_state=42)
+reg_2.fit(X_train, y_train) 
+y_pre = reg_2.predict(X_test)
 
-reg_df_1['prediction_pay_price'] = reg_df_1['prediction_pay_price'].map(lambda x: 0 if x < 30 else x)
+
+print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
+y_pred_2 = reg_2.predict(reg_test_2)
+    
+
+reg_df_2 = pd.DataFrame({ 
+                        'user_id' : data[(data.classification_label == -1)&(data.pay_price > 0.99)]['user_id'],
+                        'price':reg_test_2['pay_price'],
+                        'prediction_pay_price' : y_pred_2
+                        })    
+    
+reg_df_2['prediction_pay_price'] = reg_df_2['prediction_pay_price'].map(lambda x: 0.99 if x < 0 else x)
+
+
 reg_df = pd.concat([reg_df_1,reg_df_2])
 
-reg_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'].map(lambda x: 0 if x < 0.99 else x)
 
-reg_df.to_csv('D:/999github/kaggle/sub_sample_10.csv', index=False)
+reg_df['a'] = reg_df['prediction_pay_price'] - reg_df['price']
+reg_df['a'] = reg_df['a'].map(lambda x: x if x < 0 else 0)
+reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'] - reg_df['a']
+
+
+reg_df[['user_id','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+reg_df[['user_id','price','prediction_pay_price']].to_csv('D:/999github/kaggle/sub_sample_10.csv', index=False)
+
 
 '''
 回归特征权重显示
 '''
-
-importances = reg.coef_
+importances = reg_1.coef_
 indices = np.argsort(importances)[::-1]
 print("Feature ranking:")
-for f in range(reg_features.shape[1]):
-    print("%d. feature %d (%f): %s" % (f + 1, indices[f], importances[indices[f]] , reg_features.columns[indices[f]] ))
+for f in range(reg_features_1.shape[1]):
+    print("%d. feature %d (%f): %s" % (f + 1, indices[f], importances[indices[f]] , reg_features_1.columns[indices[f]] ))
+
+
+
+importances = reg_2.coef_
+indices = np.argsort(importances)[::-1]
+print("Feature ranking:")
+for f in range(reg_features_1.shape[1]):
+    print("%d. feature %d (%f): %s" % (f + 1, indices[f], importances[indices[f]] , reg_features_2.columns[indices[f]] ))
+
 
