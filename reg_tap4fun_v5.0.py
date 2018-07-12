@@ -145,16 +145,16 @@ print('dummies finish!!')
 # =============================================================================
 reg_test_1 = data[(data.classification_label == -1)&(data.pay_price == 0)].drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
 reg_test_1['intercept'] = 1.0
-
-
 # =============================================================================
 # reg_test_2 = data[(data.classification_label == -1)&(data.pay_price > 0)].drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
 # =============================================================================
 
-reg_test_2 = data[(data.classification_label == -1)&(data.pay_price > 0)][['pay_price','ivory_add_value','stone_add_value','ivory_reduce_value','wood_add_value','general_acceleration_add_value','stone_reduce_value','training_acceleration_add_value','wood_reduce_value','meat_add_value','general_acceleration_reduce_value']]
+reg_test_2 = data[(data.classification_label == -1)&(data.pay_price > 0)&(data.pay_price < 100)][['pay_price','ivory_add_value','stone_add_value','ivory_reduce_value','wood_add_value','general_acceleration_add_value','stone_reduce_value','training_acceleration_add_value','wood_reduce_value','meat_add_value','general_acceleration_reduce_value']]
 reg_test_2['intercept'] = 1.0
 
 
+reg_test_3 = data[(data.classification_label == -1)&(data.pay_price >= 100)][['pay_price','ivory_add_value','stone_add_value','ivory_reduce_value','wood_add_value','general_acceleration_add_value','stone_reduce_value','training_acceleration_add_value','wood_reduce_value','meat_add_value','general_acceleration_reduce_value']]
+reg_test_3['intercept'] = 1.0
 '''
 训练回归模型
 '''
@@ -164,25 +164,35 @@ reg_data_1 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price == 0)]
 # reg_data = reg_data.drop((reg_data[(reg_data.pay_price >= 100) & (reg_data.avg_online_minutes < 35)]).index)
 # reg_data_1 = reg_data_1.drop((reg_data_1[(reg_data_1.pay_price < 0.99) & (reg_data_1.avg_online_minutes > 840)]).index)
 # =============================================================================
-
 reg_target_1 = reg_data_1['label']
 reg_features_1 = reg_data_1.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
-
 reg_features_1['intercept'] = 1.0
 
 
-reg_data_2 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price > 0)]
-# =============================================================================
-# reg_data_2 = reg_data_2.drop((reg_data_2[(reg_data_2.pay_price >= 1000) & (reg_data_2.pay_price == reg_data_2.prediction_pay_price)]).index)
-# =============================================================================
-reg_data_2 = reg_data_2.drop((reg_data_2[(reg_data_2.pay_price >= 1000) & ((reg_data_2.pay_price/reg_data_2.prediction_pay_price) > 0.9)]).index)
 
+reg_data_2 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price > 0)&(reg_data.pay_price < 100)]
 reg_target_2 = reg_data_2['label']
-reg_features_2 = reg_data_2.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
-
+# =============================================================================
+# reg_features_2 = reg_data_2.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+# =============================================================================
 reg_features_2 = reg_data_2[['pay_price','ivory_add_value','stone_add_value','ivory_reduce_value','wood_add_value','general_acceleration_add_value','stone_reduce_value','training_acceleration_add_value','wood_reduce_value','meat_add_value','general_acceleration_reduce_value']]
-
 reg_features_2['intercept'] = 1.0
+
+
+
+
+
+reg_data_3 = reg_data[(reg_data.label >= 0)&(reg_data.pay_price >= 100)]
+# =============================================================================
+# reg_data_3 = reg_data_3.drop((reg_data_3[(reg_data_3.pay_price >= 1000) & (reg_data_3.pay_price == reg_data_3.prediction_pay_price)]).index)
+# =============================================================================
+reg_target_3 = reg_data_3['label']
+# =============================================================================
+# reg_features_3 = reg_data_3.drop(['user_id','register_time','classification_label','prediction_pay_price','xiangcha','label'],axis=1)
+# =============================================================================
+reg_features_3 = reg_data_3[['pay_price','ivory_add_value','stone_add_value','ivory_reduce_value','wood_add_value','general_acceleration_add_value','stone_reduce_value','training_acceleration_add_value','wood_reduce_value','meat_add_value','general_acceleration_reduce_value']]
+reg_features_3['intercept'] = 1.0
+
 
 
 '''
@@ -194,7 +204,8 @@ reg_features_2['intercept'] = 1.0
 
 from sklearn.linear_model import ElasticNet
 reg_1 = ElasticNet(alpha=0.8, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
-reg_2 = ElasticNet(alpha=0.7, l1_ratio=1, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
+reg_2 = ElasticNet(alpha=0.8, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
+reg_3 = ElasticNet(alpha=0.8, l1_ratio=0.8, fit_intercept=True, normalize=False, precompute=True, copy_X=True, max_iter=1000, tol=0.001, warm_start=True, positive=True, random_state=42, selection='cyclic')
 
 '''
 实际回归建模
@@ -202,7 +213,7 @@ reg_2 = ElasticNet(alpha=0.7, l1_ratio=1, fit_intercept=True, normalize=False, p
 
 
 X_train,X_test,y_train,y_test = train_test_split(reg_features_1,reg_target_1,test_size=0.2,random_state=42)
-reg_1.fit(reg_features_1, reg_target_1)
+reg_1.fit(X_train, y_train)
 y_pre = reg_1.predict(X_test)
 
 
@@ -228,15 +239,41 @@ y_pred_2 = reg_2.predict(reg_test_2)
     
 
 reg_df_2 = pd.DataFrame({ 
-                        'user_id' : data[(data.classification_label == -1)&(data.pay_price > 0)]['user_id'],
+                        'user_id' : data[(data.classification_label == -1)&(data.pay_price > 0)&(data.pay_price <100)]['user_id'],
                         'price':reg_test_2['pay_price'],
                         'prediction_pay_price' : y_pred_2
                         })
-    
 reg_df_2['prediction_pay_price'] = reg_df_2['prediction_pay_price'].map(lambda x: 0.99 if x < 0 else x)
 
 
-reg_df = pd.concat([reg_df_1,reg_df_2])
+
+
+X_train,X_test,y_train,y_test = train_test_split(reg_features_3,reg_target_3,test_size=0.2,random_state=42)
+reg_3.fit(X_train, y_train)
+y_pre = reg_3.predict(X_test)
+
+
+print(np.sqrt(metrics.mean_squared_error(y_test, y_pre)))
+y_pred_3 = reg_3.predict(reg_test_3)
+    
+
+reg_df_3 = pd.DataFrame({ 
+                        'user_id' : data[(data.classification_label == -1)&(data.pay_price >= 100)]['user_id'],
+                        'price':reg_test_3['pay_price'],
+                        'prediction_pay_price' : y_pred_3
+                        })
+reg_df_3['prediction_pay_price'] = reg_df_3['prediction_pay_price'].map(lambda x: 0.99 if x < 0 else x)
+
+
+
+
+
+
+
+
+
+
+reg_df = pd.concat([reg_df_1,reg_df_2,reg_df_3])
 
 reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'].map(lambda x: 0 if x < 0.99 else x)
 
@@ -267,3 +304,8 @@ for f in range(reg_features_2.shape[1]):
     print("%d. feature %d (%f): %s" % (f + 1, indices[f], importances[indices[f]] , reg_features_2.columns[indices[f]] ))
 
 
+importances = reg_3.coef_
+indices = np.argsort(importances)[::-1]
+print("Feature ranking:")
+for f in range(reg_features_3.shape[1]):
+    print("%d. feature %d (%f): %s" % (f + 1, indices[f], importances[indices[f]] , reg_features_3.columns[indices[f]] ))
