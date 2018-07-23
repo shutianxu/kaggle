@@ -125,7 +125,6 @@ tap_fun_test = pd.read_csv("D:/data/tap4fun/tap_fun_test.csv", sep = ',')
 # sns.heatmap(corrmat, vmax=0.8, square=True)
 # 
 # 
-# 
 # k  = 20 # 关系矩阵中将显示10个特征
 # cols = corrmat.nlargest(k, 'prediction_pay_price')['prediction_pay_price'].index
 # cm = np.corrcoef(data_vis[cols].values.T)
@@ -237,7 +236,9 @@ reg_df = pd.DataFrame({
 reg_df['prediction_pay_price'] = reg_df['prediction_pay_price'].map(lambda x: 0 if x < 0.01 else x)
 
 
-reg_df.to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+# =============================================================================
+# reg_df.to_csv('D:/999github/kaggle/sub_sample.csv', index=False)
+# =============================================================================
 
 
 '''
