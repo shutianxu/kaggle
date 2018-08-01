@@ -30,6 +30,25 @@ train = pd.read_csv('D:/data/new_data/train_set.csv')
 test = pd.read_csv('D:/data/new_data/test_set.csv')
 test_id = test["id"].copy()
 
+
+vec = TfidfVectorizer(ngram_range=(1,2),min_df=3, max_df=0.9,use_idf=1,smooth_idf=1, sublinear_tf=1)
+trn_term_doc = vec.fit_transform(train[column])
+test_term_doc = vec.transform(test[column])
+
+column="word_seg"
+vec = TfidfVectorizer(ngram_range=(1,2),min_df=3, max_df=0.9,use_idf=1,smooth_idf=1, sublinear_tf=1)
+trn_term_doc = vec.fit_transform(train[column])
+test_term_doc = vec.transform(test[column])
+
+
+
+
+
+
+
+
+
+
 train_tokenized = []
 for i in train['word_seg']:
     train_tokenized.append(i.split(' '))
@@ -37,6 +56,9 @@ for i in train['word_seg']:
 test_tokenized = []
 for j in test['word_seg']:
     train_tokenized.append(j.split(' '))
+
+
+
 
 token_counter = collections.Counter()
 def count_token(train_tokenized):
