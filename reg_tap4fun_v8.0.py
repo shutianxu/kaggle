@@ -9,6 +9,7 @@ v2.0 LASSO回归 转化label 为 ([prediction_pay_price]-[pay_price])/[predictio
 v3.0 LASSO回归 转化label 为 ([prediction_pay_price]-[pay_price])/[prediction_pay_price] -> 66
 
 '''
+
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
@@ -24,7 +25,6 @@ from scipy.stats import  norm
 from sklearn.preprocessing import StandardScaler
 import datetime
 from sklearn.ensemble import RandomForestRegressor
-
 
 
 # =============================================================================
